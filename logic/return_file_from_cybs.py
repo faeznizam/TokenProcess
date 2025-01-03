@@ -1,8 +1,12 @@
 # import module
+import logging
 import os
-from .helper_for_return_file import process_file, map_to_original_file, analyze_result, create_upload_ready_file
+from .helper_return_file_from_cybs import process_file, map_to_original_file, analyze_result, create_upload_ready_file
 
-def return_file_process_flow(folder_path):
+# Logging configuration
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def return_file_from_cybs_main(folder_path):
     """
     What does this function do?
     1. Check if file already been processed.
@@ -45,36 +49,21 @@ def return_file_process_flow(folder_path):
 
         # Check if both file path avalailable
         if not send_file_path:
-            print('Batch id in filename starting with MCO_UTS is not match.')
+            logging.info('Batch id in filename starting with MCO_UTS is not match.')
         if not return_file_path:
-            print('Batch id in filename starting with unicef_malaysia is not match')
+            logging.info('Batch id in filename starting with unicef_malaysia is not match')
 
         # check if both filr path available before process both files.
         if send_file_path and return_file_path:
 
             parsed_df = process_file(return_file_path)
-
             map_to_original_file(send_file_path, parsed_df, folder_path, send_file_name)
-
             analyze_result(folder_path)
-
-            # prepare file to upload
             create_upload_ready_file(folder_path)
 
-
-
-            print("Process complete. Final file with suffix '_SF' has been created")
+            logging.info("Process complete. Final file with suffix '_SF' has been created")
         else:
-            print('Batch id in file name not match.')
-            print('Make sure Batch id in file name for both file sent and file return match')
+            logging.info('Batch id in file name not match.')
+            logging.info('Make sure Batch id in file name for both file sent and file return match')
             
-            
-        
-    
-
-
-
-"""     
-if __name__ == '__main__':
-    return_file_process_flow()
-"""         
+ 

@@ -15,29 +15,40 @@ BEFORE UPLOAD TO SALESFORCE USING DATALOADER. THE SIMPLIFICATIONS ARE:
 # Logging configuration
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def delete_column(df):
+def delete_column(df, filename):
     # TO DELETE UNWANTED COLUMNS.
-
-    delete_column_list = ['Supporter ID', 'First Name', 'Last Name', 
-                          'Issuing Bank', 'CardHolder Name', 'Payment Method (DC/CC)', 
-                          'Payment Submethod (Mastercard/Visa/Amex)', 'Mobile Number', 
-                          'Current Payment Gateway', 'New PL/OT Case Number'
-                          
-    ]
+    
+    delete_column_list = [
+        'Donor Id','Title','First Name','Last Name','Ethnic','Gender','Street','City','State',
+        'Post Code','Country','Home Phone','Work Phone','Mobile Phone','Email','Date of Birth',
+        'National Id','Last Pledge Amount','Last Pledge Date','Last Cash Amount','Last Cash Date',
+        'Pledge id','Pledge Date','Pledge Start Date','Pledge End Date','Donation Amount',
+        'Payment Method','Payment Submethod','Frequency','Cardholder Name',
+        'Gift Date','Bank Account Holder Name','Bank Account Number','Bank','DRTV Time','Unique Id',
+        'Membership No','Action','Description','Campaign','Campaign Name',
+        'DRTV Channel','Creative','Result']
     
     df = df.drop(columns=delete_column_list)
 
     return df
 
-def rename_column(df):
+def rename_column(df, filename):
     # RENAME COLUMN BASED ON FILE NAME.
 
-    df = df.rename(columns={
+    if 'VSMC_SF' in filename:
+        df = df.rename(columns={
         'Truncated CC' : 'sescore__Card_Number_Masked__c',
-        'Expiry Date MM/YY format' : 'sescore__Card_Expiry__c',
-        'Pledge ID' : 'sescore__External_Pledge_Reference_Id__c',
-        'IPay88 Tokenized ID' : 'sescore__Card_Token__c',
-        'Instrument Identifier' : 
+        'Expiry Date' : 'sescore__Card_Expiry__c',
+        'External Pledge Reference Id' : 'sescore__External_Pledge_Reference_Id__c',
+        'iPay88 Tokenized ID' : 'sescore__Card_Token__c'
+        })
+
+    elif 'Token_SF' in filename:
+        df = df.rename(columns={
+        'Truncated CC' : 'sescore__Card_Number_Masked__c',
+        'Expiry Date' : 'sescore__Card_Expiry__c',
+        'External Pledge Reference Id' : 'sescore__Pledge_Id__c',
+        'iPay88 Tokenized ID' : 'sescore__Card_Token__c'
         })
 
     return df
@@ -70,13 +81,14 @@ def process_file(folder_path, filename):
 
     logging.info('Process complete')
 
-def token_return_main(folder_path):
+def import_iPay88_token_to_main_token_main(folder_path):
     # OVERALL FLOW
     
     for filename in os.listdir(folder_path):
-        if '_SF' in filename:
+        if 'VSMC_SF' in filename:
             process_file(folder_path, filename)
-        
+        elif 'Token_SF' in filename:
+            process_file(folder_path, filename)
     
 
 
