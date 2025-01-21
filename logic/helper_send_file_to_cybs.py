@@ -24,6 +24,7 @@ def create_template_table():
         'purchaseTotals_grandTotalAmount' : [],	
         'recurringSubscriptionInfo_amount' : [],	
         'recurringSubscriptionInfo_frequency' : [],
+        'ccAuthService_commerceIndicator' : []
         }
     
     return pd.DataFrame(table_template)
@@ -51,6 +52,10 @@ def copy_data_into_table(new_df, df, file):
         new_df['purchaseTotals_grandTotalAmount'] = '0'
         new_df['recurringSubscriptionInfo_amount'] = '0'
         new_df['recurringSubscriptionInfo_frequency'] = 'on-demand'
+        new_df['ccAuthService_commerceIndicator'] = 'moto'
+        new_df['paySubscriptionCreateService_disableAutoAuth'] = 'true'
+        
+
     
     else:
         new_df['billTo_firstName'] = df['First Name']
@@ -72,6 +77,10 @@ def copy_data_into_table(new_df, df, file):
         new_df['purchaseTotals_grandTotalAmount'] = '0'
         new_df['recurringSubscriptionInfo_amount'] = '0'
         new_df['recurringSubscriptionInfo_frequency'] = 'on-demand'
+        new_df['ccAuthService_commerceIndicator'] = 'moto'
+        new_df['paySubscriptionCreateService_disableAutoAuth'] = 'true'
+        
+
 
     
 
