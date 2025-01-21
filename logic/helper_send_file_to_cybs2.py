@@ -71,7 +71,8 @@ def main_template(folder_path,df,batch_number):
         'billTo_country', 'billTo_postalCode', 'card_accountNumber', 'card_expirationMonth',
         'card_expirationYear', 'card_cardType', 'purchaseTotals_currency', 
         'merchantReferenceCode', 'purchaseTotals_grandTotalAmount',
-        'recurringSubscriptionInfo_amount', 'recurringSubscriptionInfo_frequency'
+        'recurringSubscriptionInfo_amount', 'recurringSubscriptionInfo_frequency',
+        'ccAuthService_commerceIndicator', 'paySubscriptionCreateService_disableAutoAuth'
     ]
 
     footer_data = ['END', 'SUM=0.00']
