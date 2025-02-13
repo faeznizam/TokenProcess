@@ -72,7 +72,7 @@ def process_file(folder_path, filename):
     # TO PROCESS FILES WITH ALL FUNCTIONS.
     
     file_path = os.path.join(folder_path, filename)
-    df = pd.read_excel(file_path)
+    df = pd.read_excel(file_path, engine='openpyxl')
     analyze_file(df, filename)
     df = delete_column(df, filename)
     df = rename_column(df, filename)
