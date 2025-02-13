@@ -35,7 +35,7 @@ def copy_data_into_table(new_df, df, file):
     if file.startswith('MCO_UTS'):
         new_df['billTo_firstName'] = df['First Name']
         new_df['paySubscriptionCreateService_run'] = 'true'
-        new_df['ccAuthService_run'] = 'true'
+        new_df['ccAuthService_run'] = 'false'
         new_df['billTo_lastName'] = df['Last Name']
         new_df['billTo_email'] = df['Email']	
         new_df['billTo_street1'] = df['Street']	
@@ -60,7 +60,7 @@ def copy_data_into_table(new_df, df, file):
     else:
         new_df['billTo_firstName'] = df['First Name']
         new_df['paySubscriptionCreateService_run'] = 'true'
-        new_df['ccAuthService_run'] = 'true'
+        new_df['ccAuthService_run'] = 'false'
         new_df['billTo_lastName'] = df['Last Name']
         new_df['billTo_email'] = df['Email']	
         new_df['billTo_street1'] = df['Street']	
