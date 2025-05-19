@@ -25,11 +25,11 @@ def delete_column(df, filename):
 def rename_column(df, filename):
     # RENAME COLUMN BASED ON FILE NAME.
 
-    if 'VSMC_SF' in filename:
+    if 'VSMC_SF' in filename or 'VSMC_redrop_SF' in filename:
         df = df.rename(columns={
         'Truncated CC' : 'sescore__Card_Number_Masked__c',
         'Expiry Date' : 'sescore__Card_Expiry__c',
-        'External Pledge Reference Id' : 'sescore__External_Pledge_Reference_Id__c',
+        'External Pledge Reference Id' : 'sescore__External_Pledge_Reference_Unique_Id__c', 
         'iPay88 Tokenized ID' : 'sescore__Secondary_Token__c'
         })
 
@@ -64,7 +64,7 @@ def import_NCT_EG_to_secondary_token_main(folder_path):
     # OVERALL FLOW
     
     for filename in os.listdir(folder_path):
-        if 'VSMC_SF' in filename:
+        if 'VSMC_SF' in filename or 'VSMC_redrop_SF' in filename:
             process_file(folder_path, filename)
         elif 'Token_SF' in filename:
             process_file(folder_path, filename)
