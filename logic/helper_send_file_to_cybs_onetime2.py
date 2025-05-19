@@ -2,6 +2,14 @@ from datetime import datetime
 import pandas as pd
 from openpyxl import load_workbook
 import os
+import logging
+
+# Logging configuration
+logging.basicConfig(
+    level=logging.INFO, 
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt="%Y-%m-%d %H:%M:%S"
+    )
 
 def batch_counter(folder_path):
     """
@@ -40,7 +48,7 @@ def get_current_date():
 def create_dataframe(data, columns=None):
     return pd.DataFrame([data], columns=columns)
 
-def new_file_name(folder_path, batch_number):
+def new_file_name(batch_number):
     return f'To_CYB_{get_current_date()}{batch_number}.csv'
 
 def get_creation_date():
@@ -77,7 +85,7 @@ def main_template(folder_path,df,batch_number):
 # create file based on template
 def file_creation(header_data, field_names, empty_row, footer_data, df, folder_path, batch_number):
 
-    name = new_file_name(folder_path, batch_number)
+    name = new_file_name(batch_number)
 
     save_file_path = os.path.join(folder_path, name)
 
@@ -95,4 +103,4 @@ def file_creation(header_data, field_names, empty_row, footer_data, df, folder_p
     data_rows.to_csv(save_file_path, index=False, header=False, mode='a')       # Append main data rows
     last_row_data.to_csv(save_file_path, index=False, header=False, mode='a')   # Append footer data
 
-
+    logging.info(f"{name} file has been created!")
