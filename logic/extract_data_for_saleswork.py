@@ -5,8 +5,9 @@ CODE PURPOSE: To extract data from EBC Result csv file to excel file.
 # import modules
 import pandas as pd
 import os
+import re
 
-def process_file(file_path):
+def extract_result_from_result_file(file_path):
     """
     What does this function do?
     1. Open .csv file from file_path given.
@@ -49,15 +50,18 @@ def process_file(file_path):
     
     return parsed_df
 
+def filename_for_result_file(file):
+    match = re.search(r'\b\d{6}\b', file)
+    return f'Extracted result from {match.group()}.xlsx'
 
 def main():
-    folder_path = r'C:\Users\mfmohammad\OneDrive - UNICEF\Documents\SW process\20250429'
+    folder_path = r'C:\Users\mfmohammad\OneDrive - UNICEF\Documents\SW process\May\20250514\testing'
 
     for file in os.listdir(folder_path):
         if 'unicef_malaysia' in file and 'reply.all' in file:
             file_path = os.path.join(folder_path, file)
-            df = process_file(file_path)
-            df.to_excel(os.path.join(folder_path, 'extracted data from result file.xlsx'), index=False)
+            df = extract_result_from_result_file(file_path)
+            df.to_excel(os.path.join(folder_path, filename_for_result_file(file)), index=False)
 
 if __name__ == "__main__":
     main()
