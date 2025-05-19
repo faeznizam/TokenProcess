@@ -1,15 +1,14 @@
+"""
+CODE PURPOSE:
+Helper file with functions for return_file_from_cybs.py
+"""
+
+# import module
 import pandas as pd
 import os
 
 def process_file(file_path):
-    """
-    What does this function do?
-    1. Open .csv file from file_path given.
-    2. Parse the data into list and convert to dataframe and split data into 2 column by '='
-    3. Filter parsed df with condition decision = 'ACCEPT'
-    4. Return parsed df
-    """
-    
+
     desired_keys = {'merchantReferenceCode',
                     'decision',
                     'paySubscriptionCreateReply_subscriptionID',
@@ -17,8 +16,6 @@ def process_file(file_path):
                     }
 
     parsed_data = []
-
-    
 
     with open(file_path, 'r') as file:
         lines = file.readlines()
@@ -44,11 +41,8 @@ def process_file(file_path):
     # Convert the parsed data to a DataFrame manually if needed
     parsed_df = pd.DataFrame(parsed_data)
     
-    # Filter only 'ACCEPT' rows
-    if 'decision' in parsed_df.columns:
-        parsed_df = parsed_df[parsed_df['decision'] == 'ACCEPT']
-    
     return parsed_df
+
 
 def populate_truncated_cc(df, column_name):
     """
@@ -77,31 +71,42 @@ def reformat_nat_id(df):
     )
     return df
 
+def compare_last_4_digit(df, column1, column2):
+    def safe_compare(a, b):
+        if pd.isna(b) or b == '':
+            return None
+        return str(a)[-4:] == str(b)[-4:]
+
+    df['IsMatch'] = df.apply(lambda row: safe_compare(row[column1], row[column2]), axis=1)
+    return df
+
+def match_status(df): 
+    total_rows = len(df)
+    false_count = df['IsMatch'].eq(False).sum()
+
+    if false_count > 0:
+        return f'{false_count} records Not Match'
+    else:
+        return f'All {total_rows} records Match'
+
 def map_to_original_file(file_path, parsed_df, folder_path, filename):
-    """
-    What does this function do?
-    1. Read the send file and assign into original_df variable.
-    2. Check if Mobile phone in original_df and merchantreferencecode column in parsed_df.
-    3. if yes, merge both original_df and parsed_df
-    4. Populate IPay88 Tokenized ID column and Instrument Identifier column.
-    5. Populate Truncated CC column.
-    6. Save the file.
-    7. If no, stop processing and let user know.
-    """
 
     if 'MCO_UTS' in filename:
+
+        # read excel file
         original_df = pd.read_excel(file_path, dtype={'Post Code' : str, 'Card Number' : str, 
                                                 'Expiry Date': str, 'Payment Submethod': str,
                                                 'Membership No' : str, 'National Id' : str})
-        
+
         original_df = reformat_nat_id(original_df)
 
-        if 'Mobile Phone' not in original_df.columns and 'merchantReferenceCode' not in parsed_df.columns:
+        # check if the column existed in the table before merging
+        if 'Mobile Phone' not in original_df.columns or 'merchantReferenceCode' not in parsed_df.columns:
             print("Unable to Map data to original file. ")
             print("Makesure 'Mobile Phone' column in file with 'MCO_UTS' in file name")
             print("Makesure 'merchantReferenceCode' in file with 'unicef_malaysia' in file name")
         else:
-            merged_df = original_df.merge(
+            original_df = original_df.merge(
                                         parsed_df[[
                                             'merchantReferenceCode',
                                             'paySubscriptionCreateReply_subscriptionID',
@@ -110,31 +115,50 @@ def map_to_original_file(file_path, parsed_df, folder_path, filename):
                                         left_on='Mobile Phone', 
                                         right_on='merchantReferenceCode', 
                                         how='left')
-            
-            
-            original_df['IPay88 Tokenized ID'] = merged_df['paySubscriptionCreateReply_subscriptionID']
-            original_df['Instrument Identifier'] = merged_df['paySubscriptionCreateReply_instrumentIdentifierID']
 
             # populate truncated CC column.
             original_df = populate_truncated_cc(original_df, 'Card Number')
 
-            original_df.drop(columns=['Card Number','Preferred Change Date'], inplace=True)
+            original_df['IPay88 Tokenized ID'] = original_df['paySubscriptionCreateReply_subscriptionID']
+
+            original_df = original_df.rename(columns={'paySubscriptionCreateReply_instrumentIdentifierID': 'Instrument Identifier' })
+
+            original_df.drop(columns=['Card Number','Preferred Change Date', 'merchantReferenceCode', 'paySubscriptionCreateReply_subscriptionID'], inplace=True)
+
+            """
+            desired_order = [
+                'Donor Id', 'Title', 'First Name', 'Last Name', 'Ethnic', 'Gender',
+                'Street', 'City', 'State', 'Post Code', 'Country', 'Home Phone', 
+                'Work Phone', 'Mobile Phone', 'Email', 'Date of Birth', 'National Id', 
+                'Last Pledge Amount', 'Last Cash Amount', 'Last Pledge Date', 
+                'Last Cash Date', 'Pledge id', 'Pledge Date', 'Pledge Start Date', 
+                'Pledge End Date', 'Donation Amount', 'Payment Method', 
+                'Payment Submethod', 'Truncated CC', 'Expiry Date', 'Frequency', 
+                'Cardholder Name', 'Gift Date', 'Campaign', 'Campaign Name', 'Action', 
+                'Bank Account Number', 'Bank Account Holder Name', 'Description', 
+                'DRTV Time', 'Bank', 'Unique Id', 'Membership No', 'IPay88 Tokenized ID', 
+                'DRTV Channel', 'Creative', 'Instrument Identifier']
+            
+            """
+            
+            #original_df = original_df[desired_order]
+
+            original_df = compare_last_4_digit(original_df, 'Truncated CC', 'Instrument Identifier' )
 
             # save file with same file name and additional marking.
             original_df.to_excel(os.path.join(folder_path, f'{filename[:-5]}_SF.xlsx'), index=False)
 
+            return original_df
+
     elif 'New Card Token' in filename:
         original_df2 = pd.read_excel(file_path)
 
-        original_df2['IPay88 Tokenized ID'] = ''
-        original_df2['Instrument Identifier'] = ''
-
-        if 'Pledge ID' not in original_df2.columns and 'merchantReferenceCode' not in parsed_df.columns:
+        if 'Pledge ID' not in original_df2.columns or 'merchantReferenceCode' not in parsed_df.columns:
             print("Unable to Map data to original file. ")
             print("Makesure 'Mobile Phone' column in file with 'MCO_UTS' in file name")
             print("Makesure 'merchantReferenceCode' in file with 'unicef_malaysia' in file name")
         else:
-            merged_df2 = original_df2.merge(
+            original_df2 = original_df2.merge(
                                         parsed_df[[
                                             'merchantReferenceCode',
                                             'paySubscriptionCreateReply_subscriptionID',
@@ -144,17 +168,24 @@ def map_to_original_file(file_path, parsed_df, folder_path, filename):
                                         right_on='merchantReferenceCode', 
                                         how='left')
             
-            original_df2['IPay88 Tokenized ID'] = merged_df2['paySubscriptionCreateReply_subscriptionID']
-            original_df2['Instrument Identifier'] = merged_df2['paySubscriptionCreateReply_instrumentIdentifierID']
+            original_df2 = original_df2.rename(
+                columns={
+                    'paySubscriptionCreateReply_subscriptionID': 'IPay88 Tokenized ID',
+                    'paySubscriptionCreateReply_instrumentIdentifierID': 'Instrument Identifier'})
+
+            original_df.drop(columns=['merchantReferenceCode'], inplace=True)
+
+            original_df2 = compare_last_4_digit(original_df2, 'PAN 16/15 digits', 'Instrument Identifier')
 
             # save file with same file name and additional marking.
             original_df2.to_excel(os.path.join(folder_path, f'{filename[:-5]}_SF.xlsx'), index=False)
 
+            return original_df2
+        
+    else:
+        return pd.DataFrame()
+
     
-
-
-
-
 def analyze_result(folder_path):
     file_mappings = {
         'RHB' : 'RHB',
