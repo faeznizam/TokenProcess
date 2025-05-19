@@ -4,7 +4,12 @@ from .helper_send_file_to_cybs_onetime import process_data_table
 from .helper_send_file_to_cybs_onetime2 import batch_counter, get_current_date, main_template, file_creation
 
 # Logging configuration
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, 
+    format="%(asctime)s - %(levelname)s - %(message)s", 
+    datefmt="%Y-%m-%d %H:%M:%S"
+    
+    )
 
 def check_final_file_in_folder(folder_path):
     """
@@ -37,7 +42,7 @@ def process_file(folder_path, file, payment_column, expiry_column):
     original_filename = os.path.join(folder_path, f'{file[:-5]}_{current_date}{batch_number}.xlsx')
     original_df.to_excel(original_filename, index=False)
 
-    logging.info("Process completed. Check folder for files with prefix 'To_CYB'.")
+    
 
 def to_send_files_to_cybs_onetime_main(folder_path):
     """
@@ -50,7 +55,7 @@ def to_send_files_to_cybs_onetime_main(folder_path):
         str: Message indicating the process status.
     """
     if check_final_file_in_folder(folder_path):
-        return '\nFile already processed, check the folder!'
+        logging.info('File already processed, check the folder!')
 
     file_configs = [
         ('MCO_UTS', 'Payment Submethod', 'Expiry Date')  
@@ -61,4 +66,4 @@ def to_send_files_to_cybs_onetime_main(folder_path):
             if file.startswith(prefix):
                 process_file(folder_path, file, payment_column, expiry_column)
 
-    return '\nProcessing completed for all matching files.'
+    logging.info('Process complete! Proceed uploading file to EBC')
