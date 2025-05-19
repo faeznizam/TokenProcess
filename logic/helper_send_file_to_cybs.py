@@ -59,8 +59,8 @@ def copy_data_into_table(new_df, df, file):
     
     else:
         new_df['billTo_firstName'] = df['First Name']
-        new_df['paySubscriptionCreateService_run'] = 'true'
-        new_df['ccAuthService_run'] = 'false'
+        new_df['paySubscriptionCreateService_run'] = "'true"
+        new_df['ccAuthService_run'] = "'false"
         new_df['billTo_lastName'] = df['Last Name']
         new_df['billTo_email'] = df['Email']	
         new_df['billTo_street1'] = df['Street']	
@@ -182,11 +182,33 @@ def convert_to_expiry_format(df, expiry_column):
     
     return df
 
+def reformat_expiry_date(df, expiry_column):
+    date_format_regex = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+    def convert_date(value):
+        if date_format_regex.match(value):
+            # Convert "dd-mm-yyyy" to "MM/YY"
+            date_obj = datetime.datetime.strptime(value, "%Y-%m-%d")
+            return date_obj.strftime("%m/%y")
+        else:
+            return value
+
+    df[expiry_column] = df[expiry_column].astype(str).apply(convert_date)
+    
+    return df
+
+
 def process_data_table(folder_path, file, payment_submethod_column, expiry_column):
     # process file 
     file_path = os.path.join(folder_path, file)
-    original_df = pd.read_excel(file_path)
+    original_df = pd.read_excel(file_path, dtype={
+        'Post Code' : str, 
+        'Card Number' : str,
+        'Expiry Date' : str
+    })
+
     df = original_df
+    original_df = reformat_expiry_date(original_df, expiry_column)
     df = convert_to_expiry_format(df, expiry_column)
     df = drop_columns(df, file)
     df = create_expiry_month(df, expiry_column)
